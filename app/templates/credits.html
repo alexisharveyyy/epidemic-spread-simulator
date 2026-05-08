@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Credits — Epidemic Spread Simulator{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Credits &amp; Acknowledgements</h1>
+<p class="page-subtitle">The people, papers, and packages that this project stands on.</p>
+
+<section class="panel">
+    <div class="section-header"><h2>SCIENTIFIC FOUNDATIONS</h2></div>
+    <p>
+        The compartmental model implemented here is the SIR model from
+        Kermack &amp; McKendrick (1927), <em>A Contribution to the Mathematical
+        Theory of Epidemics</em>. Subsequent compartmental modeling literature
+        &mdash; Anderson &amp; May (1991), Hethcote (2000), Delamater et al.
+        (2019) &mdash; informed the parameter choices and language used
+        throughout the application.
+    </p>
+</section>
+
+<section class="panel">
+    <div class="section-header"><h2>OPEN-SOURCE DEPENDENCIES</h2></div>
+    <table class="credits-table">
+        <thead>
+            <tr><th>Library</th><th>License</th><th>Role</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener">FastAPI</a></td><td>MIT</td><td>Web framework and request routing</td></tr>
+            <tr><td><a href="https://docs.pydantic.dev/" target="_blank" rel="noopener">Pydantic</a></td><td>MIT</td><td>Request and response data validation</td></tr>
+            <tr><td><a href="https://scipy.org/" target="_blank" rel="noopener">SciPy</a></td><td>BSD-3-Clause</td><td><code>odeint</code> ODE integrator for the SIR equations</td></tr>
+            <tr><td><a href="https://numpy.org/" target="_blank" rel="noopener">NumPy</a></td><td>BSD-3-Clause</td><td>Numeric arrays and time-grid generation</td></tr>
+            <tr><td><a href="https://matplotlib.org/" target="_blank" rel="noopener">matplotlib</a></td><td>PSF-based</td><td>Server-side chart rendering</td></tr>
+            <tr><td><a href="https://pandas.pydata.org/" target="_blank" rel="noopener">pandas</a></td><td>BSD-3-Clause</td><td>Data manipulation utilities</td></tr>
+            <tr><td><a href="https://jinja.palletsprojects.com/" target="_blank" rel="noopener">Jinja2</a></td><td>BSD-3-Clause</td><td>HTML templating</td></tr>
+            <tr><td><a href="https://www.python-httpx.org/" target="_blank" rel="noopener">httpx</a></td><td>BSD-3-Clause</td><td>Async HTTP client for NewsAPI</td></tr>
+            <tr><td><a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet</a></td><td>BSD-2-Clause</td><td>Geographic spread map rendering</td></tr>
+            <tr><td><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></td><td>ODbL</td><td>Map tile data, &copy; OpenStreetMap contributors</td></tr>
+            <tr><td><a href="https://newsapi.org/" target="_blank" rel="noopener">NewsAPI</a></td><td>Developer terms</td><td>Outbreak Intelligence Feed source</td></tr>
+            <tr><td><a href="https://www.mathjax.org/" target="_blank" rel="noopener">MathJax</a></td><td>Apache 2.0</td><td>Equation typesetting on the About and Glossary pages</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<section class="panel">
+    <div class="section-header"><h2>INSPIRATION</h2></div>
+    <p>
+        Visual and interaction patterns owe a debt to the
+        <a href="https://coronavirus.jhu.edu/" target="_blank" rel="noopener">Johns Hopkins COVID-19 Dashboard</a>
+        and to <a href="https://ourworldindata.org/" target="_blank" rel="noopener">Our World in Data</a>.
+        The "command-center" aesthetic borrows from real-time geospatial
+        operations dashboards used in transportation and emergency management.
+    </p>
+</section>
+{% endblock %}

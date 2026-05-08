@@ -1,0 +1,769 @@
+{% extends "base.html" %}
+{% block title %}Simulator — Epidemic Spread Simulator{% endblock %}
+{% block page_class %}wide{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+{% endblock %}
+
+{% block content %}
+        <h1 class="page-title">Epidemic Spread Simulator</h1>
+        <p class="page-subtitle">
+            Susceptible-Infected-Recovered compartmental model with live outbreak intelligence and geographic spread visualization.
+        </p>
+
+        <!-- =================================================
+             WORKSPACE: parameters (left) + simulation output (right)
+             ================================================= -->
+        <div class="workspace" id="workspace">
+
+        <!-- =================================================
+             SIMULATION PARAMETERS
+             ================================================= -->
+        <section class="panel">
+            <div class="section-header"><h2>SIMULATION PARAMETERS</h2></div>
+            <form id="sim-form">
+                <div class="parameters-grid">
+                    <div class="param-card">
+                        <div class="param-label">
+                            <span>N &mdash; Population</span>
+                            {# step="1" on the typed-in readout so any whole
+                               number is accepted; the slider keeps its
+                               coarser step for snap-to-grid dragging. #}
+                            <input type="number" class="param-readout" id="readout-population"
+                                   min="{{ slider_population_min }}"
+                                   max="{{ slider_population_max }}"
+                                   step="1"
+                                   value="{{ default_population }}" />
+                        </div>
+                        <p class="param-description">Total individuals in the closed system being modeled.</p>
+                        <input type="range" id="input-population"
+                               min="{{ slider_population_min }}"
+                               max="{{ slider_population_max }}"
+                               step="{{ slider_population_step }}"
+                               value="{{ default_population }}" />
+                    </div>
+
+                    <div class="param-card">
+                        <div class="param-label">
+                            <span>&beta; &mdash; Transmission Rate</span>
+                            <input type="number" class="param-readout" id="readout-beta"
+                                   min="{{ slider_beta_min }}"
+                                   max="{{ slider_beta_max }}"
+                                   step="{{ slider_beta_step }}"
+                                   value="{{ default_beta }}" />
+                        </div>
+                        <p class="param-description">Rate at which susceptible individuals become infected on contact.</p>
+                        <input type="range" id="input-beta"
+                               min="{{ slider_beta_min }}"
+                               max="{{ slider_beta_max }}"
+                               step="{{ slider_beta_step }}"
+                               value="{{ default_beta }}" />
+                    </div>
+
+                    <div class="param-card">
+                        <div class="param-label">
+                            <span>&gamma; &mdash; Recovery Rate</span>
+                            <input type="number" class="param-readout" id="readout-gamma"
+                                   min="{{ slider_gamma_min }}"
+                                   max="{{ slider_gamma_max }}"
+                                   step="{{ slider_gamma_step }}"
+                                   value="{{ default_gamma }}" />
+                        </div>
+                        <p class="param-description">Rate at which infected individuals recover; inverse of mean infectious period.</p>
+                        <input type="range" id="input-gamma"
+                               min="{{ slider_gamma_min }}"
+                               max="{{ slider_gamma_max }}"
+                               step="{{ slider_gamma_step }}"
+                               value="{{ default_gamma }}" />
+                    </div>
+
+                    <div class="param-card">
+                        <div class="param-label">
+                            <span>I&#8320; &mdash; Initial Infected</span>
+                            <input type="number" class="param-readout" id="readout-initial-infected"
+                                   min="{{ slider_initial_infected_min }}"
+                                   max="{{ slider_initial_infected_max }}"
+                                   step="{{ slider_initial_infected_step }}"
+                                   value="{{ default_initial_infected }}" />
+                        </div>
+                        <p class="param-description">Number of infected individuals at simulation start (day 0).</p>
+                        <input type="range" id="input-initial-infected"
+                               min="{{ slider_initial_infected_min }}"
+                               max="{{ slider_initial_infected_max }}"
+                               step="{{ slider_initial_infected_step }}"
+                               value="{{ default_initial_infected }}" />
+                    </div>
+
+                    <div class="param-card" style="grid-column: 1 / -1;">
+                        <div class="param-label">
+                            <span>T &mdash; Simulation Days</span>
+                            <input type="number" class="param-readout" id="readout-days"
+                                   min="{{ slider_days_min }}"
+                                   max="{{ slider_days_max }}"
+                                   step="{{ slider_days_step }}"
+                                   value="{{ default_days }}" />
+                        </div>
+                        <p class="param-description">Total integration window in days from outbreak start.</p>
+                        <input type="range" id="input-days"
+                               min="{{ slider_days_min }}"
+                               max="{{ slider_days_max }}"
+                               step="{{ slider_days_step }}"
+                               value="{{ default_days }}" />
+                    </div>
+                </div>
+
+                <label class="checkbox-row">
+                    <input type="checkbox" id="input-export-csv" />
+                    <span>Export results to CSV</span>
+                </label>
+
+                <button type="submit" class="btn btn-primary" id="run-btn">RUN SIMULATION</button>
+
+                <div class="loading-bar-wrap hidden" id="loading-bar-wrap">
+                    <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+                    <div class="loading-status">SOLVING DIFFERENTIAL EQUATIONS</div>
+                </div>
+            </form>
+        </section>
+
+        <!-- =================================================
+             SIMULATION OUTPUT
+             ================================================= -->
+        <section class="panel hidden" id="results-panel">
+            <div class="section-header"><h2>SIMULATION OUTPUT</h2></div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Peak Infected</div>
+                    <div class="stat-value amber" id="stat-peak-infected">0</div>
+                    <div class="stat-unit" id="stat-peak-day">day 0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Outbreak Duration</div>
+                    <div class="stat-value" id="stat-duration">0</div>
+                    <div class="stat-unit">days</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Recovered</div>
+                    <div class="stat-value" id="stat-recovered">0</div>
+                    <div class="stat-unit">individuals</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Herd Immunity</div>
+                    <div class="stat-value" id="stat-herd">--</div>
+                    <div class="stat-unit" id="stat-herd-unit">threshold</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-label">SIR CURVES</div>
+                <img id="sir-chart" alt="SIR simulation chart" />
+            </div>
+
+            <div class="csv-link-wrap hidden" id="csv-link-wrap">
+                <a id="csv-link" class="btn btn-secondary btn-small" href="#" download>DOWNLOAD CSV</a>
+            </div>
+        </section>
+
+        </div><!-- /.workspace -->
+
+        <!-- =================================================
+             ERROR PANEL
+             ================================================= -->
+        <div class="error-panel hidden" id="error-panel">
+            <button type="button" class="error-close" id="error-close" aria-label="Dismiss">x</button>
+            <p class="error-title">SIMULATION ERROR</p>
+            <p class="error-message" id="error-message"></p>
+        </div>
+
+        <!-- =================================================
+             OUTBREAK INTELLIGENCE FEED
+             ================================================= -->
+        <section class="panel">
+            <div class="section-header">
+                <h2>OUTBREAK INTELLIGENCE FEED</h2>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span class="live-badge">LIVE</span>
+                    <button type="button" class="btn btn-small" id="news-refresh-btn">REFRESH</button>
+                </div>
+            </div>
+            <div class="news-grid" id="news-grid"></div>
+        </section>
+
+        <!-- =================================================
+             GEOGRAPHIC SPREAD SIMULATION
+             ================================================= -->
+        <section class="panel">
+            <div class="section-header">
+                <h2>GEOGRAPHIC SPREAD SIMULATION</h2>
+                <div class="spread-controls">
+                    <span class="day-counter">Day: <span id="spread-day-counter">0</span></span>
+                    <button type="button" class="btn btn-small" id="spread-play-btn" disabled>PLAY</button>
+                    <button type="button" class="btn btn-small" id="spread-reset-btn">RESET</button>
+                </div>
+            </div>
+
+            <div id="spread-error-banner" class="hidden">
+                SIMULATION ERROR &mdash; SPREAD DATA UNAVAILABLE
+            </div>
+
+            <div class="map-wrap">
+                <div id="spread-hint-overlay">
+                    Click anywhere on the map to place outbreak origin
+                </div>
+                <div id="spread-map"></div>
+            </div>
+
+            <input type="range" id="spread-day-slider"
+                   min="0" max="{{ spread_max_day }}" step="1" value="0" disabled />
+
+            <div class="stats-grid" style="margin-top: 1rem;">
+                <div class="stat-card">
+                    <div class="stat-label">Countries Affected</div>
+                    <div class="stat-value" id="spread-stat-countries">0</div>
+                    <div class="stat-unit">of 195</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Spread Radius</div>
+                    <div class="stat-value" id="spread-stat-radius">0</div>
+                    <div class="stat-unit">km</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Wave Count</div>
+                    <div class="stat-value" id="spread-stat-waves">0</div>
+                    <div class="stat-unit">active</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Simulation Day</div>
+                    <div class="stat-value" id="spread-stat-day">0</div>
+                    <div class="stat-unit">days elapsed</div>
+                </div>
+            </div>
+        </section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        // -------------------------------------------------------------
+        // Top-of-script state. Initialized from Jinja2 server-rendered
+        // defaults so the first paint shows the correct readouts.
+        // -------------------------------------------------------------
+        let currentBeta = {{ default_beta }};
+        let currentGamma = {{ default_gamma }};
+        let currentDay = 0;
+        let playInterval = null;
+        let newsRefreshInterval = null;
+        let originMarker = null;
+        let originLat = null;
+        let originLng = null;
+        const spreadLayers = [];
+        let map = null;
+
+        const SPREAD_MAX_DAY = {{ spread_max_day }};
+
+        // -------------------------------------------------------------
+        // Wave-ring color palette (matches the spec exactly)
+        // -------------------------------------------------------------
+        const WAVE_STYLES = [
+            { fillColor: 'rgba(255,68,102,0.55)', color: 'rgba(255,68,102,0.9)' },  // origin zone
+            { fillColor: 'rgba(255,110,40,0.38)', color: 'rgba(255,120,40,0.7)' },  // severe
+            { fillColor: 'rgba(255,170,0,0.28)',  color: 'rgba(255,170,0,0.55)' },  // moderate
+            { fillColor: 'rgba(0,212,255,0.16)',  color: 'rgba(0,212,255,0.4)'  },  // early
+        ];
+        const SECONDARY_STYLE = {
+            fillColor: 'rgba(255,170,0,0.2)',
+            color: 'rgba(255,170,0,0.5)',
+        };
+
+        // -------------------------------------------------------------
+        // Two-way binding between the range slider and the editable
+        // numeric readout. Either control can drive the value.
+        // -------------------------------------------------------------
+        function bindSlider(inputId, readoutId, onChange) {
+            const slider = document.getElementById(inputId);
+            const readout = document.getElementById(readoutId);
+            const min = parseFloat(slider.min);
+            const max = parseFloat(slider.max);
+
+            function emit(value) {
+                if (onChange) onChange(parseFloat(value));
+            }
+
+            // Slider drives readout.
+            slider.addEventListener('input', (e) => {
+                readout.value = e.target.value;
+                emit(e.target.value);
+            });
+
+            // Readout drives slider live as the user types (no clamping yet
+            // so they can finish typing without the field jumping mid-edit).
+            readout.addEventListener('input', (e) => {
+                const raw = parseFloat(e.target.value);
+                if (!Number.isFinite(raw)) return;
+                if (raw < min || raw > max) return;
+                slider.value = raw;
+                emit(raw);
+            });
+
+            // On commit (blur or Enter), clamp out-of-range values back into
+            // the valid window so the form payload always validates server-side.
+            readout.addEventListener('change', (e) => {
+                let value = parseFloat(e.target.value);
+                if (!Number.isFinite(value)) {
+                    value = parseFloat(slider.value);
+                }
+                value = Math.max(min, Math.min(max, value));
+                slider.value = value;
+                readout.value = value;
+                emit(value);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            bindSlider('input-population', 'readout-population');
+            bindSlider('input-beta', 'readout-beta', (val) => { currentBeta = val; });
+            bindSlider('input-gamma', 'readout-gamma', (val) => { currentGamma = val; });
+            bindSlider('input-initial-infected', 'readout-initial-infected');
+            bindSlider('input-days', 'readout-days');
+
+            initSimulationForm();
+            initErrorPanel();
+            initNews();
+            initSpreadMap();
+
+            // Auto-load any scenario or history preset from the URL.
+            applyQueryParamPreset();
+        });
+
+        // -------------------------------------------------------------
+        // Simulation form submission
+        // -------------------------------------------------------------
+        function initSimulationForm() {
+            const form = document.getElementById('sim-form');
+            const runBtn = document.getElementById('run-btn');
+            const loadingWrap = document.getElementById('loading-bar-wrap');
+            const resultsPanel = document.getElementById('results-panel');
+            const csvLinkWrap = document.getElementById('csv-link-wrap');
+            const csvLink = document.getElementById('csv-link');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                hideError();
+                loadingWrap.classList.remove('hidden');
+                runBtn.classList.add('loading', 'disabled');
+                runBtn.disabled = true;
+                runBtn.textContent = 'RUNNING SIMULATION';
+
+                const payload = {
+                    population: parseInt(document.getElementById('input-population').value, 10),
+                    beta: parseFloat(document.getElementById('input-beta').value),
+                    gamma: parseFloat(document.getElementById('input-gamma').value),
+                    initial_infected: parseInt(document.getElementById('input-initial-infected').value, 10),
+                    days: parseInt(document.getElementById('input-days').value, 10),
+                    export_csv: document.getElementById('input-export-csv').checked,
+                };
+
+                try {
+                    const response = await fetch('/api/simulate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+                    if (!response.ok) {
+                        const err = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                        const message = Array.isArray(err.detail)
+                            ? err.detail.map((d) => d.msg || JSON.stringify(d)).join('; ')
+                            : (err.detail || 'Simulation failed');
+                        throw new Error(message);
+                    }
+                    const data = await response.json();
+                    renderResults(data, csvLinkWrap, csvLink);
+                    resultsPanel.classList.remove('hidden');
+                    document.getElementById('workspace').classList.add('show-results');
+                    pushToHistory(payload, data.summary);
+                } catch (err) {
+                    showError(err.message || 'Network error');
+                } finally {
+                    loadingWrap.classList.add('hidden');
+                    runBtn.classList.remove('loading', 'disabled');
+                    runBtn.disabled = false;
+                    runBtn.textContent = 'RUN SIMULATION';
+                }
+            });
+        }
+
+        function renderResults(data, csvLinkWrap, csvLink) {
+            // The API returns the raw base64 payload, so the client constructs
+            // the data: URI here.
+            document.getElementById('sir-chart').src = 'data:image/png;base64,' + data.chart_b64;
+
+            const summary = data.summary;
+            document.getElementById('stat-peak-infected').textContent = summary.peak_infected.toLocaleString();
+            document.getElementById('stat-peak-day').textContent = 'day ' + summary.peak_day;
+            document.getElementById('stat-duration').textContent = summary.outbreak_duration_days;
+            document.getElementById('stat-recovered').textContent = summary.total_recovered.toLocaleString();
+
+            const herdEl = document.getElementById('stat-herd');
+            herdEl.textContent = summary.herd_immunity_reached ? 'YES' : 'NO';
+            herdEl.classList.remove('amber', 'green', 'red');
+            herdEl.classList.add(summary.herd_immunity_reached ? 'green' : 'red');
+
+            if (data.csv_download_path) {
+                csvLink.href = data.csv_download_path;
+                csvLinkWrap.classList.remove('hidden');
+            } else {
+                csvLinkWrap.classList.add('hidden');
+            }
+        }
+
+        // -------------------------------------------------------------
+        // Error panel
+        // -------------------------------------------------------------
+        function initErrorPanel() {
+            document.getElementById('error-close').addEventListener('click', hideError);
+        }
+        function showError(message) {
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error-panel').classList.remove('hidden');
+        }
+        function hideError() {
+            document.getElementById('error-panel').classList.add('hidden');
+        }
+
+        // -------------------------------------------------------------
+        // News feed
+        // -------------------------------------------------------------
+        function initNews() {
+            document.getElementById('news-refresh-btn').addEventListener('click', () => loadNews(true));
+            loadNews(false);
+            // Auto-refresh every 60 seconds.
+            newsRefreshInterval = setInterval(() => loadNews(false), 60000);
+        }
+
+        async function loadNews(forceRefresh) {
+            const url = forceRefresh ? '/api/news/refresh' : '/api/news';
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('news fetch failed');
+                const articles = await response.json();
+                renderNews(articles);
+            } catch (err) {
+                // News failures are non-fatal; show fallback message inline.
+                const grid = document.getElementById('news-grid');
+                grid.innerHTML = '<div class="news-card"><p class="news-headline">News feed temporarily unavailable</p></div>';
+            }
+        }
+
+        function renderNews(articles) {
+            const grid = document.getElementById('news-grid');
+            grid.innerHTML = '';
+            articles.slice(0, 4).forEach((article, idx) => {
+                const card = document.createElement('div');
+                card.className = 'news-card' + (idx === 0 ? ' active' : '');
+                card.innerHTML = `
+                    <span class="severity-badge ${escapeAttr(article.severity)}">${escapeText(article.severity)}</span>
+                    <p class="news-headline">${escapeText(article.headline)}</p>
+                    <div class="news-meta">
+                        <span class="news-source">${escapeText(article.source)}</span>
+                        <span class="news-time">${escapeText(article.time)}</span>
+                    </div>
+                `;
+                card.addEventListener('click', () => {
+                    // Setting the active card is idempotent on the already-active one.
+                    grid.querySelectorAll('.news-card').forEach((c) => c.classList.remove('active'));
+                    card.classList.add('active');
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        function escapeText(value) {
+            const div = document.createElement('div');
+            div.textContent = String(value ?? '');
+            return div.innerHTML;
+        }
+        function escapeAttr(value) {
+            return String(value ?? '').replace(/[^a-z]/gi, '');
+        }
+
+        // -------------------------------------------------------------
+        // Spread map
+        // -------------------------------------------------------------
+        function initSpreadMap() {
+            map = L.map('spread-map').setView([20, 0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 18,
+            }).addTo(map);
+
+            // Recompute tile layout when the container resizes; without this,
+            // tiles render blank if dimensions change after initial layout.
+            const mapEl = document.getElementById('spread-map');
+            if (window.ResizeObserver) {
+                const observer = new ResizeObserver(() => map.invalidateSize());
+                observer.observe(mapEl);
+            }
+
+            map.on('click', onMapClick);
+
+            document.getElementById('spread-day-slider').addEventListener('input', onDaySliderInput);
+            document.getElementById('spread-play-btn').addEventListener('click', onPlayToggle);
+            document.getElementById('spread-reset-btn').addEventListener('click', onSpreadReset);
+        }
+
+        function onMapClick(e) {
+            document.getElementById('spread-hint-overlay').classList.add('hidden');
+            document.getElementById('spread-day-slider').removeAttribute('disabled');
+            document.getElementById('spread-play-btn').removeAttribute('disabled');
+
+            if (originMarker) {
+                map.removeLayer(originMarker);
+            }
+
+            const originIcon = L.divIcon({
+                className: 'origin-marker',
+                html: '<div class="origin-marker-inner"></div>',
+                iconSize: [14, 14],
+                iconAnchor: [7, 7],
+            });
+
+            originLat = e.latlng.lat;
+            originLng = e.latlng.lng;
+            originMarker = L.marker([originLat, originLng], { icon: originIcon }).addTo(map);
+            originMarker.bindPopup(
+                'Origin: ' + originLat.toFixed(2) + ', ' + originLng.toFixed(2)
+            ).openPopup();
+
+            currentDay = 1;
+            const slider = document.getElementById('spread-day-slider');
+            slider.value = 1;
+            document.getElementById('spread-day-counter').textContent = '1';
+
+            renderSpread(1);
+        }
+
+        function onDaySliderInput(e) {
+            // Manual slider movement always interrupts playback to avoid race
+            // conditions where two POSTs render out of order.
+            if (playInterval !== null) {
+                clearInterval(playInterval);
+                playInterval = null;
+                document.getElementById('spread-play-btn').textContent = 'PLAY';
+            }
+            currentDay = parseInt(e.target.value, 10);
+            document.getElementById('spread-day-counter').textContent = String(currentDay);
+            if (originLat !== null && originLng !== null) {
+                renderSpread(currentDay);
+            }
+        }
+
+        function onPlayToggle() {
+            const btn = document.getElementById('spread-play-btn');
+            if (playInterval === null) {
+                playInterval = setInterval(() => {
+                    currentDay = (currentDay + 1) % (SPREAD_MAX_DAY + 1);
+                    document.getElementById('spread-day-slider').value = currentDay;
+                    document.getElementById('spread-day-counter').textContent = String(currentDay);
+                    renderSpread(currentDay);
+                }, 100);
+                btn.textContent = 'STOP';
+            } else {
+                clearInterval(playInterval);
+                playInterval = null;
+                btn.textContent = 'PLAY';
+            }
+        }
+
+        function onSpreadReset() {
+            if (playInterval !== null) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
+            spreadLayers.forEach((layer) => map.removeLayer(layer));
+            spreadLayers.length = 0;
+
+            if (originMarker) {
+                map.removeLayer(originMarker);
+                originMarker = null;
+                originLat = null;
+                originLng = null;
+            }
+
+            currentDay = 0;
+            const slider = document.getElementById('spread-day-slider');
+            slider.value = 0;
+            slider.setAttribute('disabled', '');
+
+            document.getElementById('spread-day-counter').textContent = '0';
+            document.getElementById('spread-stat-countries').textContent = '0';
+            document.getElementById('spread-stat-radius').textContent = '0';
+            document.getElementById('spread-stat-waves').textContent = '0';
+            document.getElementById('spread-stat-day').textContent = '0';
+
+            document.getElementById('spread-play-btn').setAttribute('disabled', '');
+            document.getElementById('spread-play-btn').textContent = 'PLAY';
+            document.getElementById('spread-hint-overlay').classList.remove('hidden');
+            document.getElementById('spread-error-banner').classList.add('hidden');
+        }
+
+        async function renderSpread(day) {
+            if (originLat === null || originLng === null) return;
+            try {
+                const response = await fetch('/api/spread/preview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        origin_lat: originLat,
+                        origin_lng: originLng,
+                        day: day,
+                        beta: currentBeta,
+                        gamma: currentGamma,
+                    }),
+                });
+                if (!response.ok) throw new Error('spread fetch failed');
+                const data = await response.json();
+
+                spreadLayers.forEach((layer) => map.removeLayer(layer));
+                spreadLayers.length = 0;
+
+                // Draw waves outermost-first so inner waves render on top.
+                const sortedRings = [...data.wave_rings].sort((a, b) => b.wave_index - a.wave_index);
+                sortedRings.forEach((ring) => {
+                    const style = WAVE_STYLES[ring.wave_index] || WAVE_STYLES[WAVE_STYLES.length - 1];
+                    const circle = L.circle([ring.center_lat, ring.center_lng], {
+                        radius: ring.radius_km * 1000, // Leaflet expects meters
+                        fillColor: style.fillColor,
+                        color: style.color,
+                        weight: 1,
+                        fillOpacity: 1,
+                    }).addTo(map);
+                    spreadLayers.push(circle);
+                });
+
+                data.secondary_clusters.forEach((cluster) => {
+                    if (cluster.radius_km <= 0) return;
+                    const circle = L.circle([cluster.center_lat, cluster.center_lng], {
+                        radius: cluster.radius_km * 1000,
+                        fillColor: SECONDARY_STYLE.fillColor,
+                        color: SECONDARY_STYLE.color,
+                        weight: 1,
+                        fillOpacity: 1,
+                    }).addTo(map);
+                    spreadLayers.push(circle);
+                });
+
+                document.getElementById('spread-stat-countries').textContent = data.summary.countries_affected;
+                document.getElementById('spread-stat-radius').textContent = Math.round(data.summary.spread_radius_km).toLocaleString();
+                document.getElementById('spread-stat-waves').textContent = data.summary.wave_count;
+                document.getElementById('spread-stat-day').textContent = data.summary.simulation_day;
+                document.getElementById('spread-error-banner').classList.add('hidden');
+            } catch (err) {
+                if (playInterval !== null) {
+                    clearInterval(playInterval);
+                    playInterval = null;
+                    document.getElementById('spread-play-btn').textContent = 'PLAY';
+                }
+                document.getElementById('spread-error-banner').classList.remove('hidden');
+            }
+        }
+
+        // -------------------------------------------------------------
+        // Local simulation history (browser-side, /history page reads it)
+        // -------------------------------------------------------------
+        const HISTORY_KEY = 'epidemic_simulator_history';
+        const HISTORY_MAX_ENTRIES = 20;
+
+        function pushToHistory(params, summary) {
+            let entries;
+            try {
+                entries = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            } catch {
+                entries = [];
+            }
+            entries.push({
+                id: (crypto && crypto.randomUUID)
+                    ? crypto.randomUUID()
+                    // Fallback for older browsers without crypto.randomUUID;
+                    // collisions are extremely unlikely at < 20 entries.
+                    : 'h-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10),
+                timestamp: new Date().toISOString(),
+                params: { ...params },
+                summary: { ...summary },
+            });
+            if (entries.length > HISTORY_MAX_ENTRIES) {
+                entries = entries.slice(-HISTORY_MAX_ENTRIES);
+            }
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
+        }
+
+        // -------------------------------------------------------------
+        // Query-param presets: load from a scenario id or a history id
+        // and auto-run the simulation. Called at the end of DOMContentLoaded.
+        // -------------------------------------------------------------
+        async function applyQueryParamPreset() {
+            const params = new URLSearchParams(window.location.search);
+            const scenarioId = params.get('scenario');
+            const historyId = params.get('from_history');
+
+            let preset = null;
+
+            if (scenarioId) {
+                try {
+                    const res = await fetch(`/api/scenarios/${encodeURIComponent(scenarioId)}`);
+                    if (res.ok) preset = await res.json();
+                } catch (err) {
+                    console.warn('Could not load scenario preset:', err);
+                }
+            } else if (historyId) {
+                try {
+                    const entries = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+                    const entry = entries.find((e) => e.id === historyId);
+                    if (entry) preset = entry.params;
+                } catch {
+                    /* ignore corrupted localStorage */
+                }
+            }
+
+            if (preset) {
+                applyPresetToSliders(preset);
+                document.getElementById('sim-form').requestSubmit();
+            }
+        }
+
+        // Maps preset field names to the existing slider/readout id pairs.
+        const PRESET_FIELD_BINDINGS = {
+            population:       ['input-population',       'readout-population'],
+            beta:             ['input-beta',             'readout-beta'],
+            gamma:            ['input-gamma',            'readout-gamma'],
+            initial_infected: ['input-initial-infected', 'readout-initial-infected'],
+            days:             ['input-days',             'readout-days'],
+        };
+
+        function applyPresetToSliders(preset) {
+            for (const [field, [sliderId, readoutId]] of Object.entries(PRESET_FIELD_BINDINGS)) {
+                if (preset[field] === undefined || preset[field] === null) continue;
+                const slider = document.getElementById(sliderId);
+                const readout = document.getElementById(readoutId);
+                if (slider) {
+                    slider.value = preset[field];
+                    // Dispatching `input` triggers the existing two-way
+                    // binding so the readout and any tracked state
+                    // (currentBeta / currentGamma) stay in sync.
+                    slider.dispatchEvent(new Event('input'));
+                }
+                if (readout) readout.value = preset[field];
+            }
+        }
+
+        // -------------------------------------------------------------
+        // Cleanup
+        // -------------------------------------------------------------
+        window.addEventListener('beforeunload', () => {
+            if (newsRefreshInterval !== null) clearInterval(newsRefreshInterval);
+            if (playInterval !== null) clearInterval(playInterval);
+        });
+    </script>
+{% endblock %}

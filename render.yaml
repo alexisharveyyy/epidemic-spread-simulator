@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: epidemic-spread-simulator
+    runtime: python
+    plan: free
+    region: ohio
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      # Set NEWS_API_KEY manually in the Render dashboard. `sync: false`
+      # tells Render not to expect this value in the YAML, so the secret
+      # never lands in version control.
+      - key: NEWS_API_KEY
+        sync: false

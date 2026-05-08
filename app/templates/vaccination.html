@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}Vaccination — Epidemic Spread Simulator{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Vaccination Scenarios</h1>
+<p class="page-subtitle">
+    How does pre-existing immunity from vaccination change outbreak dynamics?
+</p>
+
+<section class="panel">
+    <div class="section-header"><h2>HOW THIS WORKS</h2></div>
+    <p>
+        This page is a simplified model. Full vaccination dynamics would require
+        an SEIRV compartmental model with vaccination rates and waning immunity,
+        but starting some fraction of the population in the recovered (immune)
+        compartment is a reasonable approximation for steady-state vaccination
+        coverage at outbreak start. Two SIR runs are issued, one with no
+        immunity and one with the chosen coverage; the results are compared
+        side by side.
+    </p>
+</section>
+
+<section class="panel">
+    <div class="section-header"><h2>CONFIGURE COMPARISON</h2></div>
+    <form id="vac-form">
+        <div class="parameters-grid">
+            <div class="param-card">
+                <div class="param-label">
+                    <span>POPULATION (N)</span>
+                    <input type="number" class="param-readout" id="vac-population" min="2" max="10000000" step="1" value="100000" />
+                </div>
+                <p class="param-description">Total population size for both runs.</p>
+            </div>
+            <div class="param-card">
+                <div class="param-label">
+                    <span>&beta; — TRANSMISSION RATE</span>
+                    <input type="number" class="param-readout" id="vac-beta" step="0.01" min="0.01" max="0.99" value="0.30" />
+                </div>
+                <p class="param-description">Per-contact transmission rate.</p>
+            </div>
+            <div class="param-card">
+                <div class="param-label">
+                    <span>&gamma; — RECOVERY RATE</span>
+                    <input type="number" class="param-readout" id="vac-gamma" step="0.01" min="0.01" max="0.99" value="0.10" />
+                </div>
+                <p class="param-description">Inverse of mean infectious period.</p>
+            </div>
+            <div class="param-card">
+                <div class="param-label">
+                    <span>INITIAL INFECTED</span>
+                    <input type="number" class="param-readout" id="vac-initial-infected" min="1" max="1000" step="1" value="10" />
+                </div>
+                <p class="param-description">Active infections at day 0.</p>
+            </div>
+            <div class="param-card">
+                <div class="param-label">
+                    <span>DAYS</span>
+                    <input type="number" class="param-readout" id="vac-days" min="30" max="365" step="1" value="160" />
+                </div>
+                <p class="param-description">Length of each simulated run.</p>
+            </div>
+            <div class="param-card">
+                <div class="param-label">
+                    <span>VACCINATION COVERAGE (%)</span>
+                    <input type="number" class="param-readout" id="vac-coverage-readout" min="0" max="{{ vaccination_coverage_max }}" step="1" value="50" />
+                </div>
+                <p class="param-description">Percentage of the population that begins immune.</p>
+                <input type="range" id="vac-coverage" min="0" max="{{ vaccination_coverage_max }}" step="1" value="50" />
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="run-comparison-btn" style="margin-top: 1rem;">RUN COMPARISON</button>
+        <div class="loading-bar-wrap hidden" id="vac-loading">
+            <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+            <div class="loading-status">RUNNING TWO SIMULATIONS</div>
+        </div>
+    </form>
+</section>
+
+<div class="error-panel hidden" id="vac-error">
+    <button type="button" class="error-close" id="vac-error-close" aria-label="Dismiss">x</button>
+    <p class="error-title">COMPARISON FAILED</p>
+    <p class="error-message" id="vac-error-message"></p>
+</div>
+
+<section class="panel hidden" id="vac-results">
+    <div class="section-header"><h2>COMPARISON</h2></div>
+    <p class="param-description" id="vac-narrative"></p>
+
+    <div class="vaccination-comparison">
+        <div>
+            <div class="chart-label">NO VACCINATION</div>
+            <div class="chart-container">
+                <img id="vac-chart-baseline" alt="Baseline run chart" />
+            </div>
+            <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="stat-card">
+                    <div class="stat-label">Peak Infected</div>
+                    <div class="stat-value amber" id="vac-baseline-peak">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Peak Day</div>
+                    <div class="stat-value" id="vac-baseline-peak-day">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Recovered</div>
+                    <div class="stat-value" id="vac-baseline-recovered">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Herd Immunity</div>
+                    <div class="stat-value" id="vac-baseline-herd">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="chart-label" id="vac-coverage-label">WITH VACCINATION</div>
+            <div class="chart-container">
+                <img id="vac-chart-vaccinated" alt="Vaccinated run chart" />
+            </div>
+            <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="stat-card">
+                    <div class="stat-label">Peak Infected</div>
+                    <div class="stat-value amber" id="vac-vaccinated-peak">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Peak Day</div>
+                    <div class="stat-value" id="vac-vaccinated-peak-day">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Recovered</div>
+                    <div class="stat-value" id="vac-vaccinated-recovered">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Herd Immunity</div>
+                    <div class="stat-value" id="vac-vaccinated-herd">--</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const VAC_COVERAGE_MAX = {{ vaccination_coverage_max }};
+const form = document.getElementById('vac-form');
+const runBtn = document.getElementById('run-comparison-btn');
+const loading = document.getElementById('vac-loading');
+const results = document.getElementById('vac-results');
+const errorPanel = document.getElementById('vac-error');
+const errorMsg = document.getElementById('vac-error-message');
+document.getElementById('vac-error-close').addEventListener('click', () => errorPanel.classList.add('hidden'));
+
+// Two-way binding for the coverage slider <-> readout pair.
+const coverageSlider = document.getElementById('vac-coverage');
+const coverageReadout = document.getElementById('vac-coverage-readout');
+coverageSlider.addEventListener('input', (e) => { coverageReadout.value = e.target.value; });
+coverageReadout.addEventListener('change', (e) => {
+    let v = parseInt(e.target.value, 10);
+    if (!Number.isFinite(v)) v = parseInt(coverageSlider.value, 10);
+    v = Math.max(0, Math.min(VAC_COVERAGE_MAX, v));
+    coverageSlider.value = v;
+    coverageReadout.value = v;
+});
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorPanel.classList.add('hidden');
+    loading.classList.remove('hidden');
+    runBtn.classList.add('disabled');
+    runBtn.disabled = true;
+
+    const population = parseInt(document.getElementById('vac-population').value, 10);
+    const beta = parseFloat(document.getElementById('vac-beta').value);
+    const gamma = parseFloat(document.getElementById('vac-gamma').value);
+    const initialInfected = parseInt(document.getElementById('vac-initial-infected').value, 10);
+    const days = parseInt(document.getElementById('vac-days').value, 10);
+    const coveragePct = parseInt(coverageSlider.value, 10);
+    const initialRecovered = Math.round(population * coveragePct / 100);
+
+    const baselinePayload = {
+        population, beta, gamma,
+        initial_infected: initialInfected,
+        initial_recovered: 0,
+        days,
+        export_csv: false,
+    };
+    const vaccinatedPayload = {
+        population, beta, gamma,
+        initial_infected: initialInfected,
+        initial_recovered: initialRecovered,
+        days,
+        export_csv: false,
+    };
+
+    try {
+        const [baselineRes, vaccinatedRes] = await Promise.all([
+            fetch('/api/simulate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(baselinePayload) }),
+            fetch('/api/simulate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(vaccinatedPayload) }),
+        ]);
+        if (!baselineRes.ok) throw new Error('Baseline simulation failed');
+        if (!vaccinatedRes.ok) {
+            const err = await vaccinatedRes.json().catch(() => ({ detail: 'Unknown error' }));
+            const message = Array.isArray(err.detail) ? err.detail.map((d) => d.msg || JSON.stringify(d)).join('; ') : (err.detail || 'Vaccinated simulation failed');
+            throw new Error(message);
+        }
+
+        const baseline = await baselineRes.json();
+        const vaccinated = await vaccinatedRes.json();
+
+        document.getElementById('vac-coverage-label').textContent = `WITH ${coveragePct}% VACCINATION`;
+        document.getElementById('vac-chart-baseline').src = 'data:image/png;base64,' + baseline.chart_b64;
+        document.getElementById('vac-chart-vaccinated').src = 'data:image/png;base64,' + vaccinated.chart_b64;
+
+        renderStats('vac-baseline', baseline.summary);
+        renderStats('vac-vaccinated', vaccinated.summary);
+
+        const peakDelta = baseline.summary.peak_infected - vaccinated.summary.peak_infected;
+        const peakPct = baseline.summary.peak_infected > 0
+            ? Math.round(peakDelta / baseline.summary.peak_infected * 100)
+            : 0;
+        const dayDelta = baseline.summary.outbreak_duration_days - vaccinated.summary.outbreak_duration_days;
+        document.getElementById('vac-narrative').textContent =
+            `With ${coveragePct}% vaccination coverage, peak infections drop by ${peakPct}% ` +
+            `(${peakDelta.toLocaleString()} fewer cases) and the outbreak ends ${dayDelta} days earlier.`;
+
+        results.classList.remove('hidden');
+    } catch (err) {
+        errorMsg.textContent = err.message || 'Network error';
+        errorPanel.classList.remove('hidden');
+    } finally {
+        loading.classList.add('hidden');
+        runBtn.classList.remove('disabled');
+        runBtn.disabled = false;
+    }
+});
+
+function renderStats(prefix, summary) {
+    document.getElementById(`${prefix}-peak`).textContent = summary.peak_infected.toLocaleString();
+    document.getElementById(`${prefix}-peak-day`).textContent = summary.peak_day;
+    document.getElementById(`${prefix}-recovered`).textContent = summary.total_recovered.toLocaleString();
+    const herd = document.getElementById(`${prefix}-herd`);
+    herd.textContent = summary.herd_immunity_reached ? 'YES' : 'NO';
+    herd.classList.remove('green', 'red');
+    herd.classList.add(summary.herd_immunity_reached ? 'green' : 'red');
+}
+</script>
+{% endblock %}

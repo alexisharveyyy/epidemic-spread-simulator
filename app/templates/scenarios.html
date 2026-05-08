@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Scenarios — Epidemic Spread Simulator{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Scenario Library</h1>
+<p class="page-subtitle">Pre-configured epidemic profiles based on real-world disease parameters.</p>
+
+<section class="panel">
+    <div class="section-header"><h2>SELECT A SCENARIO</h2></div>
+    <div class="scenario-grid" id="scenario-grid">
+        <div class="param-description">Loading scenarios&hellip;</div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const grid = document.getElementById('scenario-grid');
+    try {
+        const res = await fetch('/api/scenarios');
+        if (!res.ok) throw new Error('Bad status: ' + res.status);
+        const data = await res.json();
+        if (!data.scenarios || data.scenarios.length === 0) {
+            grid.innerHTML = '<div class="param-description">No scenarios available.</div>';
+            return;
+        }
+        grid.innerHTML = data.scenarios.map(renderScenarioCard).join('');
+    } catch (err) {
+        grid.innerHTML = '<div class="error-panel"><p class="error-title">LOAD FAILED</p><p class="error-message">Could not load scenarios.</p></div>';
+    }
+});
+
+function escapeText(value) {
+    const div = document.createElement('div');
+    div.textContent = String(value ?? '');
+    return div.innerHTML;
+}
+
+function renderScenarioCard(s) {
+    const r0 = (s.beta / s.gamma).toFixed(2);
+    return `
+        <div class="scenario-card">
+            <h3 class="scenario-title">${escapeText(s.name)}</h3>
+            <p class="scenario-description">${escapeText(s.description)}</p>
+            <div class="scenario-params">
+                &beta; = ${escapeText(s.beta)} &middot; &gamma; = ${escapeText(s.gamma)} &middot; R<sub>0</sub> = ${r0}
+            </div>
+            <div class="scenario-outcome">${escapeText(s.expected_outcome)}</div>
+            <a href="/?scenario=${encodeURIComponent(s.id)}" class="btn btn-primary">LOAD SCENARIO</a>
+        </div>
+    `;
+}
+</script>
+{% endblock %}

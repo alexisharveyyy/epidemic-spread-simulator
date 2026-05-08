@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Epidemic Spread Simulator{% endblock %}</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="site-nav">
+        <a href="/" class="site-nav-title">EPIDEMIC SPREAD SIMULATOR</a>
+        <ul class="site-nav-links">
+            <li><a href="/" {% if active_page == "home" %}class="active"{% endif %}>Simulator</a></li>
+            <li><a href="/scenarios" {% if active_page == "scenarios" %}class="active"{% endif %}>Scenarios</a></li>
+            <li><a href="/sensitivity" {% if active_page == "sensitivity" %}class="active"{% endif %}>Sensitivity</a></li>
+            <li><a href="/vaccination" {% if active_page == "vaccination" %}class="active"{% endif %}>Vaccination</a></li>
+            <li><a href="/history" {% if active_page == "history" %}class="active"{% endif %}>History</a></li>
+            <li><a href="/about" {% if active_page == "about" %}class="active"{% endif %}>About</a></li>
+            <li><a href="/glossary" {% if active_page == "glossary" %}class="active"{% endif %}>Glossary</a></li>
+        </ul>
+        <span class="site-nav-status">
+            <span class="status-dot"></span>SYSTEM ONLINE
+        </span>
+    </nav>
+
+    <main class="page-container {% block page_class %}narrow{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-row">
+            <span>SIR model based on Kermack &amp; McKendrick (1927)</span>
+            <span class="footer-links">
+                <a href="/author" {% if active_page == "author" %}class="active"{% endif %}>Author</a>
+                <a href="/credits" {% if active_page == "credits" %}class="active"{% endif %}>Credits</a>
+                <a href="/roadmap" {% if active_page == "roadmap" %}class="active"{% endif %}>Roadmap</a>
+            </span>
+        </div>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}Sensitivity Analysis — Epidemic Spread Simulator{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Sensitivity Analysis</h1>
+<p class="page-subtitle">
+    How do peak infections and outbreak duration respond to small changes in
+    transmission or recovery rate?
+</p>
+
+<section class="panel">
+    <div class="section-header"><h2>SWEEP CONFIGURATION</h2></div>
+    <form id="sensitivity-form">
+        <div class="param-card">
+            <div class="param-label"><span>SWEEP PARAMETER</span></div>
+            <p class="param-description">Choose which parameter to vary across the sweep range.</p>
+            <label class="radio-row">
+                <input type="radio" name="sweep_parameter" value="beta" checked />
+                <span>&beta; (transmission rate)</span>
+            </label>
+            <label class="radio-row">
+                <input type="radio" name="sweep_parameter" value="gamma" />
+                <span>&gamma; (recovery rate)</span>
+            </label>
+        </div>
+
+        <div class="parameters-grid" style="margin-top: 1rem;">
+            <div class="param-card">
+                <div class="param-label">
+                    <span>SWEEP FROM</span>
+                    <input type="number" class="param-readout" id="sweep-from" step="0.01" min="0.01" max="0.99" value="0.10" />
+                </div>
+                <p class="param-description">Lower bound of the swept value.</p>
+            </div>
+            <div class="param-card">
+                <div class="param-label">
+                    <span>SWEEP TO</span>
+                    <input type="number" class="param-readout" id="sweep-to" step="0.01" min="0.01" max="0.99" value="0.50" />
+                </div>
+                <p class="param-description">Upper bound of the swept value, inclusive.</p>
+            </div>
+            <div class="param-card">
+                <div class="param-label">
+                    <span>STEP</span>
+                    <input type="number" class="param-readout" id="sweep-step" step="0.005" min="0.005" max="0.5" value="0.025" />
+                </div>
+                <p class="param-description">Increment between swept values. Maximum 50 points per sweep.</p>
+            </div>
+            <div class="param-card">
+                <div class="param-label">
+                    <span>POPULATION (N)</span>
+                    <input type="number" class="param-readout" id="fixed-population" min="2" max="10000000" step="1" value="100000" />
+                </div>
+                <p class="param-description">Total population, held constant across the sweep.</p>
+            </div>
+            <div class="param-card">
+                <div class="param-label">
+                    <span>FIXED &beta;</span>
+                    <input type="number" class="param-readout" id="fixed-beta" step="0.01" min="0.01" max="0.99" value="0.30" />
+                </div>
+                <p class="param-description">Used when sweeping &gamma;; ignored when sweeping &beta;.</p>
+            </div>
+            <div class="param-card">
+                <div class="param-label">
+                    <span>FIXED &gamma;</span>
+                    <input type="number" class="param-readout" id="fixed-gamma" step="0.01" min="0.01" max="0.99" value="0.10" />
+                </div>
+                <p class="param-description">Used when sweeping &beta;; ignored when sweeping &gamma;.</p>
+            </div>
+            <div class="param-card">
+                <div class="param-label">
+                    <span>INITIAL INFECTED</span>
+                    <input type="number" class="param-readout" id="fixed-initial-infected" min="1" max="1000" step="1" value="10" />
+                </div>
+                <p class="param-description">Number of infected individuals at day 0.</p>
+            </div>
+            <div class="param-card">
+                <div class="param-label">
+                    <span>DAYS</span>
+                    <input type="number" class="param-readout" id="fixed-days" min="30" max="365" step="1" value="160" />
+                </div>
+                <p class="param-description">Simulation length per swept point.</p>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="run-sweep-btn" style="margin-top: 1rem;">RUN SWEEP</button>
+        <div class="loading-bar-wrap hidden" id="sweep-loading">
+            <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+            <div class="loading-status">RUNNING SWEEP</div>
+        </div>
+    </form>
+</section>
+
+<div class="error-panel hidden" id="sweep-error">
+    <button type="button" class="error-close" id="sweep-error-close" aria-label="Dismiss">x</button>
+    <p class="error-title">SWEEP FAILED</p>
+    <p class="error-message" id="sweep-error-message"></p>
+</div>
+
+<section class="panel hidden" id="sweep-results">
+    <div class="section-header"><h2>SWEEP RESULTS</h2></div>
+
+    <div class="chart-container">
+        <div class="chart-label">SENSITIVITY CHART</div>
+        <img id="sweep-chart" alt="Sensitivity sweep chart" />
+    </div>
+
+    <table class="history-table" id="sweep-table">
+        <thead>
+            <tr>
+                <th id="sweep-table-x">Parameter</th>
+                <th>Peak Infected</th>
+                <th>Peak Day</th>
+                <th>Total Recovered</th>
+                <th>Outbreak Days</th>
+            </tr>
+        </thead>
+        <tbody id="sweep-tbody"></tbody>
+    </table>
+</section>
+
+<section class="panel">
+    <div class="section-header"><h2>METHODOLOGY</h2></div>
+    <p>
+        Sensitivity analysis tells you which input parameters drive
+        outcomes most strongly. For SIR, peak infections are highly
+        sensitive to &beta; near $R_0 = 1$, the threshold above which an
+        outbreak takes off. Far above that threshold, the curves
+        flatten because the outbreak saturates the susceptible pool.
+        Sweeping $\gamma$ has a complementary effect: faster recovery
+        lowers $R_0$ and shrinks the peak.
+    </p>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+<script>
+const form = document.getElementById('sensitivity-form');
+const runBtn = document.getElementById('run-sweep-btn');
+const loading = document.getElementById('sweep-loading');
+const results = document.getElementById('sweep-results');
+const errorPanel = document.getElementById('sweep-error');
+const errorMsg = document.getElementById('sweep-error-message');
+document.getElementById('sweep-error-close').addEventListener('click', () => errorPanel.classList.add('hidden'));
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorPanel.classList.add('hidden');
+    loading.classList.remove('hidden');
+    runBtn.classList.add('disabled');
+    runBtn.disabled = true;
+
+    const payload = {
+        sweep_parameter: form.querySelector('input[name=sweep_parameter]:checked').value,
+        sweep_from: parseFloat(document.getElementById('sweep-from').value),
+        sweep_to: parseFloat(document.getElementById('sweep-to').value),
+        step: parseFloat(document.getElementById('sweep-step').value),
+        population: parseInt(document.getElementById('fixed-population').value, 10),
+        beta: parseFloat(document.getElementById('fixed-beta').value),
+        gamma: parseFloat(document.getElementById('fixed-gamma').value),
+        initial_infected: parseInt(document.getElementById('fixed-initial-infected').value, 10),
+        days: parseInt(document.getElementById('fixed-days').value, 10),
+    };
+
+    try {
+        const res = await fetch('/api/sensitivity/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
+            const message = Array.isArray(err.detail)
+                ? err.detail.map((d) => d.msg || JSON.stringify(d)).join('; ')
+                : (err.detail || 'Sweep failed');
+            throw new Error(message);
+        }
+        const data = await res.json();
+        renderSweep(data);
+        results.classList.remove('hidden');
+    } catch (err) {
+        errorMsg.textContent = err.message || 'Network error';
+        errorPanel.classList.remove('hidden');
+    } finally {
+        loading.classList.add('hidden');
+        runBtn.classList.remove('disabled');
+        runBtn.disabled = false;
+    }
+});
+
+function escapeText(value) {
+    const div = document.createElement('div');
+    div.textContent = String(value ?? '');
+    return div.innerHTML;
+}
+
+function renderSweep(data) {
+    document.getElementById('sweep-chart').src = 'data:image/png;base64,' + data.chart_b64;
+    document.getElementById('sweep-table-x').textContent = data.sweep_parameter === 'beta' ? 'β' : 'γ';
+    const tbody = document.getElementById('sweep-tbody');
+    tbody.innerHTML = data.points.map((p) => `
+        <tr>
+            <td>${p.parameter_value.toFixed(4)}</td>
+            <td>${p.peak_infected.toLocaleString()}</td>
+            <td>${p.peak_day}</td>
+            <td>${p.total_recovered.toLocaleString()}</td>
+            <td>${p.outbreak_duration_days}</td>
+        </tr>
+    `).join('');
+}
+</script>
+{% endblock %}

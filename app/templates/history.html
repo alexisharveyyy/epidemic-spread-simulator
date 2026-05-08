@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}History — Epidemic Spread Simulator{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Simulation History</h1>
+<p class="page-subtitle">
+    Your recent simulations from this browser. History is stored locally and
+    never leaves your device.
+</p>
+
+<section class="panel">
+    <div class="section-header"><h2>RECENT RUNS</h2></div>
+    <div id="history-empty" class="param-description hidden">
+        No simulations yet. Run a simulation on the home page and it will
+        appear here.
+    </div>
+    <table class="history-table" id="history-table">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>&beta;</th>
+                <th>&gamma;</th>
+                <th>Population</th>
+                <th>Peak Infected</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="history-tbody"></tbody>
+    </table>
+    <div style="margin-top: 1rem;">
+        <button type="button" class="btn btn-secondary btn-small" id="clear-history-btn">CLEAR HISTORY</button>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const HISTORY_KEY = 'epidemic_simulator_history';
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderHistory();
+    document.getElementById('clear-history-btn').addEventListener('click', () => {
+        if (confirm('Delete all simulation history? This cannot be undone.')) {
+            localStorage.removeItem(HISTORY_KEY);
+            renderHistory();
+        }
+    });
+});
+
+function loadHistory() {
+    try {
+        return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    } catch {
+        return [];
+    }
+}
+
+function escapeText(value) {
+    const div = document.createElement('div');
+    div.textContent = String(value ?? '');
+    return div.innerHTML;
+}
+
+function renderHistory() {
+    const entries = loadHistory().sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+    const tbody = document.getElementById('history-tbody');
+    const emptyState = document.getElementById('history-empty');
+    const table = document.getElementById('history-table');
+
+    if (entries.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        table.classList.add('hidden');
+        return;
+    }
+    emptyState.classList.add('hidden');
+    table.classList.remove('hidden');
+    tbody.innerHTML = entries.map(renderRow).join('');
+
+    document.querySelectorAll('.history-delete-btn').forEach((btn) => {
+        btn.addEventListener('click', (e) => deleteEntry(e.currentTarget.dataset.id));
+    });
+}
+
+function renderRow(e) {
+    const ts = new Date(e.timestamp).toLocaleString();
+    return `
+        <tr>
+            <td>${escapeText(ts)}</td>
+            <td>${escapeText(e.params.beta)}</td>
+            <td>${escapeText(e.params.gamma)}</td>
+            <td>${Number(e.params.population).toLocaleString()}</td>
+            <td>${Number(e.summary.peak_infected).toLocaleString()}</td>
+            <td>
+                <a href="/?from_history=${encodeURIComponent(e.id)}" class="btn btn-secondary btn-small">RE-RUN</a>
+                <button class="btn btn-secondary btn-small history-delete-btn" data-id="${escapeText(e.id)}">DELETE</button>
+            </td>
+        </tr>
+    `;
+}
+
+function deleteEntry(id) {
+    const filtered = loadHistory().filter((e) => e.id !== id);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered));
+    renderHistory();
+}
+</script>
+{% endblock %}

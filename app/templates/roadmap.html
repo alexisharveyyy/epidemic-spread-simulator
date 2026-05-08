@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Roadmap — Epidemic Spread Simulator{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Roadmap</h1>
+<p class="page-subtitle">Where this project is going next.</p>
+
+<section class="panel">
+    <div class="roadmap-columns">
+        <div class="roadmap-column">
+            <h3>SHIPPED (v1.0)</h3>
+            <div class="roadmap-item">SIR compartmental simulator with dark-themed dynamic charting.</div>
+            <div class="roadmap-item">Geographic spread visualization on Leaflet with wave rings and secondary clusters.</div>
+            <div class="roadmap-item">NewsAPI integration with graceful synthetic fallback.</div>
+            <div class="roadmap-item">Pre-configured scenario library (measles, COVID-19, flu, Ebola, pertussis, common cold).</div>
+            <div class="roadmap-item">Sensitivity analysis sweeps over &beta; or &gamma;.</div>
+            <div class="roadmap-item">Vaccination what-if comparison via initial-recovered fraction.</div>
+            <div class="roadmap-item">Browser-local simulation history.</div>
+        </div>
+
+        <div class="roadmap-column">
+            <h3>PLANNED (v1.x)</h3>
+            <div class="roadmap-item">SEIR model with an Exposed compartment and configurable incubation period.</div>
+            <div class="roadmap-item">Real CDC FluView dataset integration for empirical comparison.</div>
+            <div class="roadmap-item">Parameter estimation from observed case curves via least-squares fit.</div>
+            <div class="roadmap-item">Multi-strain dynamics with cross-immunity matrix.</div>
+            <div class="roadmap-item">Mobile-responsive map and chart redesign.</div>
+            <div class="roadmap-item">Word-boundary regex matching in news severity tagging.</div>
+            <div class="roadmap-item">Persistent server-side history for opt-in users.</div>
+        </div>
+
+        <div class="roadmap-column">
+            <h3>RESEARCHING (FUTURE)</h3>
+            <div class="roadmap-item">Population-density-weighted spread using raster data.</div>
+            <div class="roadmap-item">Real flight-network data for international cluster placement.</div>
+            <div class="roadmap-item">Agent-based model comparison alongside the compartmental view.</div>
+            <div class="roadmap-item">Bayesian parameter inference with <code>pymc</code>.</div>
+            <div class="roadmap-item">Intervention scheduling: time-varying &beta; for lockdowns and behavioral change.</div>
+            <div class="roadmap-item">Spatially explicit metapopulation model with commuter mixing matrices.</div>
+        </div>
+    </div>
+</section>
+{% endblock %}

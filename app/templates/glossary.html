@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Glossary — Epidemic Spread Simulator{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Glossary</h1>
+<p class="page-subtitle">Key terms in compartmental epidemic modeling.</p>
+
+<section class="panel">
+    <div class="glossary-grid">
+        <div class="glossary-entry">
+            <h3 class="glossary-term">Attack rate</h3>
+            <p class="glossary-definition">
+                Total proportion of the population infected during an outbreak.
+                Equivalent in SIR to the final value of $R(t)/N$ after the
+                epidemic burns out.
+            </p>
+        </div>
+
+        <div class="glossary-entry">
+            <h3 class="glossary-term">Basic reproduction number (R&#8320;)</h3>
+            <p class="glossary-definition">
+                Expected number of secondary infections produced by a single
+                infected individual in a fully susceptible population. For SIR,
+                $R_0 = \beta / \gamma$.
+            </p>
+        </div>
+
+        <div class="glossary-entry">
+            <h3 class="glossary-term">Compartmental model</h3>
+            <p class="glossary-definition">
+                A class of epidemic models that divides the population into
+                discrete states (compartments) and tracks transitions between
+                them via differential equations.
+            </p>
+        </div>
+
+        <div class="glossary-entry">
+            <h3 class="glossary-term">Effective reproduction number (R&#8348;)</h3>
+            <p class="glossary-definition">
+                The reproduction number at time $t$, accounting for the
+                depletion of susceptibles. $R_t = R_0 \cdot S(t)/N$. The
+                turning point of the outbreak is when $R_t$ crosses 1.
+            </p>
+        </div>
+
+        <div class="glossary-entry">
+            <h3 class="glossary-term">Force of infection</h3>
+            <p class="glossary-definition">
+                The per-capita rate at which susceptibles become infected.
+                For SIR, $\lambda(t) = \beta I(t)/N$. It is the
+                instantaneous hazard a susceptible individual faces.
+            </p>
+        </div>
+
+        <div class="glossary-entry">
+            <h3 class="glossary-term">Generation time</h3>
+            <p class="glossary-definition">
+                The average interval between an infection and the secondary
+                infections it produces. Closely related to the serial interval,
+                which is the gap between symptom onset in primary and
+                secondary cases.
+            </p>
+        </div>
+
+        <div class="glossary-entry">
+            <h3 class="glossary-term">Herd immunity threshold</h3>
+            <p class="glossary-definition">
+                Fraction of the population that must be immune to prevent
+                sustained transmission. For SIR, $1 - 1/R_0$. Sustained
+                transmission below this threshold requires re-introduction
+                from outside.
+            </p>
+        </div>
+
+        <div class="glossary-entry">
+            <h3 class="glossary-term">Homogeneous mixing</h3>
+            <p class="glossary-definition">
+                Simplifying assumption that every individual has equal
+                probability of contact with every other individual. Real
+                populations exhibit assortative mixing by age, geography,
+                and household.
+            </p>
+        </div>
+
+        <div class="glossary-entry">
+            <h3 class="glossary-term">Infectious period</h3>
+            <p class="glossary-definition">
+                Duration over which an infected individual can transmit the
+                pathogen. Mean infectious period in SIR is $1/\gamma$, so a
+                $\gamma$ of 0.1 corresponds to a 10-day infectious period.
+            </p>
+        </div>
+
+        <div class="glossary-entry">
+            <h3 class="glossary-term">SEIR model</h3>
+            <p class="glossary-definition">
+                Extension of SIR with an Exposed compartment for individuals
+                who are infected but not yet infectious. Used for diseases
+                with a meaningful incubation period such as COVID-19 or
+                measles.
+            </p>
+        </div>
+
+        <div class="glossary-entry">
+            <h3 class="glossary-term">SIR model</h3>
+            <p class="glossary-definition">
+                Susceptible-Infected-Recovered compartmental model from
+                Kermack &amp; McKendrick (1927); the foundation of modern
+                mathematical epidemiology.
+            </p>
+        </div>
+
+        <div class="glossary-entry">
+            <h3 class="glossary-term">Transmission rate (&beta;)</h3>
+            <p class="glossary-definition">
+                Rate at which infections occur between contacting susceptible
+                and infected individuals. Combines contact frequency and
+                per-contact transmission probability.
+            </p>
+        </div>
+
+        <div class="glossary-entry">
+            <h3 class="glossary-term">Waning immunity</h3>
+            <p class="glossary-definition">
+                Gradual loss of acquired immunity over time, requiring SIRS
+                or other extended models. Common for influenza and most
+                coronaviruses; less common for measles.
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+{% endblock %}

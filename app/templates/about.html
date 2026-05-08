@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}About — Epidemic Spread Simulator{% endblock %}
+
+{% block extra_head %}
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">The SIR Compartmental Model</h1>
+<p class="page-subtitle">Mathematical foundations of epidemic spread simulation.</p>
+
+<section class="panel">
+    <div class="section-header"><h2>HISTORICAL CONTEXT</h2></div>
+    <p>
+        The compartmental model that underpins this simulator was introduced by
+        William Ogilvy Kermack and Anderson Gray McKendrick in their 1927 paper
+        <em>A Contribution to the Mathematical Theory of Epidemics</em>
+        (Proc. R. Soc. Lond. A, 115, 700&ndash;721). They proposed that a population
+        could be divided into discrete groups &mdash; Susceptible, Infected, and
+        Recovered &mdash; with movement between groups governed by a small set of
+        ordinary differential equations.
+    </p>
+    <p>
+        Despite being nearly a century old, the SIR framework is still the
+        starting point for modern epidemic modeling. Extensions like SEIR
+        (adding an Exposed compartment), agent-based models, and metapopulation
+        models all build on the same compartmental abstraction.
+    </p>
+    <p>
+        Its enduring value is conceptual: a few well-chosen state variables and
+        rate equations capture the qualitative shape of an epidemic curve
+        &mdash; rise, peak, and decline &mdash; even when many real-world
+        details are abstracted away.
+    </p>
+</section>
+
+<section class="panel">
+    <div class="section-header"><h2>THE EQUATIONS</h2></div>
+    <p>$\dfrac{dS}{dt} = -\dfrac{\beta S I}{N}$</p>
+    <p class="param-description">Susceptible individuals become infected at a rate proportional to the contact between susceptibles and infecteds.</p>
+
+    <p>$\dfrac{dI}{dt} = \dfrac{\beta S I}{N} - \gamma I$</p>
+    <p class="param-description">Infected individuals are added from new infections and removed through recovery.</p>
+
+    <p>$\dfrac{dR}{dt} = \gamma I$</p>
+    <p class="param-description">Recovered (or removed) individuals accumulate at the recovery rate.</p>
+</section>
+
+<section class="panel">
+    <div class="section-header"><h2>PARAMETER INTUITION</h2></div>
+    <div class="parameters-grid">
+        <div class="param-card">
+            <div class="param-label"><span>BETA (&beta;)</span></div>
+            <p class="param-description">
+                Transmission rate &mdash; the per-capita rate at which contacts
+                between susceptibles and infecteds produce new infections.
+                Approximate values from the literature:
+                measles &asymp; 0.9, COVID-19 original strain &asymp; 0.3&ndash;0.4,
+                seasonal influenza &asymp; 0.2.
+            </p>
+        </div>
+        <div class="param-card">
+            <div class="param-label"><span>GAMMA (&gamma;)</span></div>
+            <p class="param-description">
+                Recovery rate &mdash; the inverse of the mean infectious period.
+                If the average individual is infectious for 7 days,
+                $\gamma \approx 1/7 \approx 0.143$. Faster recovery (larger $\gamma$)
+                shortens outbreaks and lowers $R_0$.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="section-header"><h2>THE REPRODUCTION NUMBER</h2></div>
+    <p>
+        The basic reproduction number $R_0 = \beta / \gamma$ is the expected
+        number of secondary infections caused by a single infected individual
+        in an entirely susceptible population. The effective reproduction
+        number $R_t = R_0 \cdot S(t)/N$ accounts for the depletion of
+        susceptibles over time.
+    </p>
+    <table class="r0-table">
+        <thead>
+            <tr><th>Disease</th><th>Estimated R&#8320;</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Measles (unvaccinated)</td><td>12&ndash;18</td></tr>
+            <tr><td>Pertussis</td><td>5.5</td></tr>
+            <tr><td>Smallpox</td><td>3.5&ndash;6</td></tr>
+            <tr><td>COVID-19 (original)</td><td>2&ndash;3</td></tr>
+            <tr><td>Influenza (seasonal)</td><td>1.3</td></tr>
+            <tr><td>MERS</td><td>&lt;1</td></tr>
+        </tbody>
+    </table>
+    <p class="param-description">
+        Sources: Anderson &amp; May (1991); Delamater et al., Emerg. Infect. Dis. (2019).
+    </p>
+</section>
+
+<section class="panel">
+    <div class="section-header"><h2>HERD IMMUNITY THRESHOLD</h2></div>
+    <p>
+        The fraction of the population that must be immune to prevent
+        sustained transmission is $1 - 1/R_0$. For COVID-19 with
+        $R_0 \approx 2.5$, the threshold is $1 - 1/2.5 = 60\%$.
+        For measles with $R_0 \approx 15$, it climbs to roughly 93%.
+    </p>
+</section>
+
+<section class="panel">
+    <div class="section-header"><h2>WHAT SIR DOES NOT CAPTURE</h2></div>
+    <ul class="bullet-list">
+        <li>Heterogeneous mixing: real contact networks are not uniform.</li>
+        <li>Age structure: children, adults, and elderly differ in contact and outcome.</li>
+        <li>Vaccination dynamics: SIR has no explicit vaccinated compartment.</li>
+        <li>Waning immunity: recovered individuals stay immune forever in SIR.</li>
+        <li>Multi-strain dynamics: SIR tracks a single pathogen.</li>
+        <li>Behavioral change: $\beta$ is constant in time, ignoring lockdowns or fatigue.</li>
+        <li>Geographic structure: the population is treated as a single well-mixed pool.</li>
+    </ul>
+</section>
+
+<section class="panel">
+    <div class="section-header"><h2>FURTHER READING</h2></div>
+    <ul class="bullet-list">
+        <li>Kermack &amp; McKendrick (1927). <em>A Contribution to the Mathematical Theory of Epidemics.</em> Proc. R. Soc. Lond. A, 115, 700&ndash;721.</li>
+        <li>Anderson &amp; May (1991). <em>Infectious Diseases of Humans: Dynamics and Control.</em> Oxford University Press.</li>
+        <li>Hethcote (2000). <em>The Mathematics of Infectious Diseases.</em> SIAM Review, 42(4), 599&ndash;653.</li>
+        <li>Delamater et al. (2019). <em>Complexity of the Basic Reproduction Number (R&#8320;).</em> Emerging Infectious Diseases, 25(1), 1&ndash;4.</li>
+    </ul>
+</section>
+{% endblock %}
