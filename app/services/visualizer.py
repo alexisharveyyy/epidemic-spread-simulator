@@ -33,19 +33,21 @@ logger = logging.getLogger(__name__)
 
 # Apply matplotlib rcParams at module level so every chart inherits the
 # theme without repeating configuration inside each function.
-plt.rcParams.update({
-    "figure.facecolor":  CHART_BG_PRIMARY,
-    "axes.facecolor":    CHART_BG_AXES,
-    "axes.edgecolor":    CHART_COLOR_LABELS,
-    "axes.labelcolor":   CHART_COLOR_LABELS,
-    "xtick.color":       CHART_COLOR_LABELS,
-    "ytick.color":       CHART_COLOR_LABELS,
-    "text.color":        CHART_COLOR_LABELS,
-    "grid.color":        CHART_COLOR_LABELS,
-    "grid.alpha":        CHART_GRID_ALPHA,
-    "legend.facecolor":  CHART_BG_AXES,
-    "legend.edgecolor":  CHART_COLOR_LABELS,
-})
+plt.rcParams.update(
+    {
+        "figure.facecolor": CHART_BG_PRIMARY,
+        "axes.facecolor": CHART_BG_AXES,
+        "axes.edgecolor": CHART_COLOR_LABELS,
+        "axes.labelcolor": CHART_COLOR_LABELS,
+        "xtick.color": CHART_COLOR_LABELS,
+        "ytick.color": CHART_COLOR_LABELS,
+        "text.color": CHART_COLOR_LABELS,
+        "grid.color": CHART_COLOR_LABELS,
+        "grid.alpha": CHART_GRID_ALPHA,
+        "legend.facecolor": CHART_BG_AXES,
+        "legend.edgecolor": CHART_COLOR_LABELS,
+    }
+)
 
 
 def _build_figure(

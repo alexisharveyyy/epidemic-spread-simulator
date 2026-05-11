@@ -1,6 +1,6 @@
 """Tests for the Outbreak Intelligence Feed."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from app.services.news_service import format_relative_time, tag_severity
 
@@ -62,7 +62,7 @@ def test_news_falls_back_when_upstream_fails(client, mock_news_api_failure):
 
 
 def _iso(delta: timedelta) -> str:
-    return (datetime.now(timezone.utc) - delta).isoformat()
+    return (datetime.now(UTC) - delta).isoformat()
 
 
 def test_format_relative_time_minutes():
@@ -78,5 +78,5 @@ def test_format_relative_time_days():
 
 
 def test_format_relative_time_future_returns_just_now():
-    future = (datetime.now(timezone.utc) + timedelta(seconds=30)).isoformat()
+    future = (datetime.now(UTC) + timedelta(seconds=30)).isoformat()
     assert format_relative_time(future) == "just now"

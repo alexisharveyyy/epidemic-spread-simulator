@@ -8,7 +8,7 @@ fallback list - the caller never sees an exception.
 
 import logging
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import httpx
 
@@ -26,16 +26,20 @@ logger = logging.getLogger(__name__)
 
 # Synthetic fallback used when NEWS_API_KEY is unset or the upstream call fails.
 # Computed at module import time so timestamps look fresh on first request.
-_NOW = datetime.now(timezone.utc)
+_NOW = datetime.now(UTC)
 FALLBACK_HEADLINES: list[dict] = [
     {
-        "headline": "Health authorities monitor cluster of respiratory cases in coastal region",
+        "headline": (
+            "Health authorities monitor cluster of respiratory cases in coastal region"
+        ),
         "source": "Public Health Wire",
         "published_at": (_NOW - timedelta(minutes=12)).isoformat(),
         "url": None,
     },
     {
-        "headline": "Surge in vector-borne illness reported across three southern districts",
+        "headline": (
+            "Surge in vector-borne illness reported across three southern districts"
+        ),
         "source": "Regional Health Bulletin",
         "published_at": (_NOW - timedelta(minutes=47)).isoformat(),
         "url": None,
@@ -123,9 +127,9 @@ def format_relative_time(published_at: str) -> str:
         ) from exc
 
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
+        parsed = parsed.replace(tzinfo=UTC)
 
-    delta = datetime.now(timezone.utc) - parsed
+    delta = datetime.now(UTC) - parsed
     seconds = delta.total_seconds()
 
     # Future timestamp (clock skew between client and server) or under one minute.

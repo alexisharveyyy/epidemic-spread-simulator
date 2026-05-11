@@ -44,9 +44,7 @@ def test_wrap_lng_handles_overflow():
     assert wrap_lng(200) == -160
 
 
-def test_secondary_clusters_empty_when_day_under_20(
-    client, default_spread_request
-):
+def test_secondary_clusters_empty_when_day_under_20(client, default_spread_request):
     payload = {**default_spread_request, "day": 10}
     response = client.post("/api/spread/preview", json=payload)
     assert response.status_code == 200

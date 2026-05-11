@@ -83,18 +83,14 @@ def test_simulate_with_csv_export_returns_download_path(
     body = response.json()
     path = body["csv_download_path"]
     assert path is not None
-    assert re.fullmatch(
-        r"/api/simulate/download/simulation_\d{8}_\d{6}\.csv", path
-    )
+    assert re.fullmatch(r"/api/simulate/download/simulation_\d{8}_\d{6}\.csv", path)
     # Cleanup so we don't litter the dev's data/ directory.
     filename = path.rsplit("/", 1)[-1]
     (CSV_OUTPUT_DIR / filename).unlink(missing_ok=True)
 
 
 def test_download_missing_file_returns_404(client):
-    response = client.get(
-        "/api/simulate/download/simulation_19990101_000000.csv"
-    )
+    response = client.get("/api/simulate/download/simulation_19990101_000000.csv")
     assert response.status_code == 404
 
 
@@ -102,9 +98,7 @@ def test_download_path_traversal_is_blocked(client):
     # URL-encoded `../../etc/passwd`. Either layer can block: the route's
     # filename-pattern regex (400) or Starlette's path normalization that
     # makes the request miss the route entirely (404). Both are effective.
-    response = client.get(
-        "/api/simulate/download/%2E%2E%2F%2E%2E%2Fetc%2Fpasswd"
-    )
+    response = client.get("/api/simulate/download/%2E%2E%2F%2E%2E%2Fetc%2Fpasswd")
     assert response.status_code in (400, 404)
     # And a non-encoded malformed filename must hit the handler's 400 branch.
     bad_name_response = client.get("/api/simulate/download/bogus.csv")
@@ -121,9 +115,7 @@ def test_csv_download_round_trip(client, default_simulation_request):
         download_response = client.get(download_path)
         assert download_response.status_code == 200
         assert download_response.headers["content-type"].startswith("text/csv")
-        assert "attachment" in download_response.headers.get(
-            "content-disposition", ""
-        )
+        assert "attachment" in download_response.headers.get("content-disposition", "")
         assert filename in download_response.headers["content-disposition"]
     finally:
         (CSV_OUTPUT_DIR / filename).unlink(missing_ok=True)

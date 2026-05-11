@@ -19,9 +19,7 @@ def build_csv_filename() -> str:
     `tests/test_exporter.py` via:
         re.fullmatch(r"simulation_\\d{8}_\\d{6}\\.csv", path.name)
     """
-    timestamp = datetime.datetime.now(tz=datetime.timezone.utc).strftime(
-        "%Y%m%d_%H%M%S"
-    )
+    timestamp = datetime.datetime.now(tz=datetime.UTC).strftime("%Y%m%d_%H%M%S")
     return f"simulation_{timestamp}.csv"
 
 
@@ -39,10 +37,12 @@ def export_to_csv(
         writer = csv.DictWriter(csv_file, fieldnames=CSV_FIELDNAMES)
         writer.writeheader()
         for record in records:
-            writer.writerow({
-                "day": record.day,
-                "susceptible": record.susceptible,
-                "infected": record.infected,
-                "recovered": record.recovered,
-                "rt": record.rt,
-            })
+            writer.writerow(
+                {
+                    "day": record.day,
+                    "susceptible": record.susceptible,
+                    "infected": record.infected,
+                    "recovered": record.recovered,
+                    "rt": record.rt,
+                }
+            )

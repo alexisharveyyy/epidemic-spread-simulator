@@ -139,9 +139,7 @@ def compute_summary(
         herd_immunity_reached = False
     else:
         threshold = (1 - 1 / r0) * population
-        herd_immunity_reached = bool(
-            max(r.recovered for r in records) >= threshold
-        )
+        herd_immunity_reached = bool(max(r.recovered for r in records) >= threshold)
 
     return SimulationSummary(
         peak_infected=peak_infected,

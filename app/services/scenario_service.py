@@ -66,7 +66,9 @@ SCENARIO_LIBRARY: list[Scenario] = [
         initial_infected=30,
         population=100_000,
         days=90,
-        expected_outcome="Peak infected: <2% · Peak day: minimal · Outbreak self-limits",
+        expected_outcome=(
+            "Peak infected: <2% · Peak day: minimal · Outbreak self-limits"
+        ),
     ),
     Scenario(
         id="ebola",

@@ -19,15 +19,17 @@ class DailyRecord(BaseModel):
     recovered: float
     rt: float
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "day": 0,
-            "susceptible": 99990.0,
-            "infected": 10.0,
-            "recovered": 0.0,
-            "rt": 2.999,
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "day": 0,
+                "susceptible": 99990.0,
+                "infected": 10.0,
+                "recovered": 0.0,
+                "rt": 2.999,
+            }
         }
-    })
+    )
 
 
 class SimulationSummary(BaseModel):

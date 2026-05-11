@@ -30,14 +30,14 @@ def test_population_conservation():
 def test_susceptible_monotonically_non_increasing():
     records = run_simulation(_make_request())
     susceptibles = [r.susceptible for r in records]
-    for prev, curr in zip(susceptibles[:-1], susceptibles[1:]):
+    for prev, curr in zip(susceptibles[:-1], susceptibles[1:], strict=False):
         assert curr <= prev + 1e-6
 
 
 def test_recovered_monotonically_non_decreasing():
     records = run_simulation(_make_request())
     recovered = [r.recovered for r in records]
-    for prev, curr in zip(recovered[:-1], recovered[1:]):
+    for prev, curr in zip(recovered[:-1], recovered[1:], strict=False):
         assert curr >= prev - 1e-6
 
 

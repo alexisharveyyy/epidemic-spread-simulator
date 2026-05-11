@@ -42,7 +42,7 @@ def test_increasing_beta_sweep_produces_non_decreasing_peak(client):
     peaks = [p["peak_infected"] for p in response.json()["points"]]
     # With gamma fixed at 0.10 and beta sweeping 0.10 -> 0.40, R0 grows
     # monotonically and so does the peak. Allow strict non-decrease.
-    for prev, curr in zip(peaks[:-1], peaks[1:]):
+    for prev, curr in zip(peaks[:-1], peaks[1:], strict=False):
         assert curr >= prev, f"Peak dropped from {prev} to {curr}"
 
 

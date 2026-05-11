@@ -3,19 +3,27 @@
 import pytest
 
 PAGE_FIXTURES = [
-    ("/",            "home",        ["EPIDEMIC SPREAD SIMULATOR"]),
-    ("/about",       "about",       ["COMPARTMENTAL MODEL"]),
-    ("/scenarios",   "scenarios",   ["SCENARIO LIBRARY"]),
-    ("/history",     "history",     ["SIMULATION HISTORY"]),
+    ("/", "home", ["EPIDEMIC SPREAD SIMULATOR"]),
+    ("/about", "about", ["COMPARTMENTAL MODEL"]),
+    ("/scenarios", "scenarios", ["SCENARIO LIBRARY"]),
+    ("/history", "history", ["SIMULATION HISTORY"]),
     ("/sensitivity", "sensitivity", ["SENSITIVITY ANALYSIS"]),
     ("/vaccination", "vaccination", ["VACCINATION SCENARIOS"]),
-    ("/glossary",    "glossary",    ["GLOSSARY"]),
-    ("/author",      "author",      ["ABOUT THE BUILDER"]),
-    ("/credits",     "credits",     ["CREDITS"]),
-    ("/roadmap",     "roadmap",     ["ROADMAP"]),
+    ("/glossary", "glossary", ["GLOSSARY"]),
+    ("/author", "author", ["ABOUT THE BUILDER"]),
+    ("/credits", "credits", ["CREDITS"]),
+    ("/roadmap", "roadmap", ["ROADMAP"]),
 ]
 
-SHARED_NAV_HREFS = ["/", "/scenarios", "/sensitivity", "/vaccination", "/history", "/about", "/glossary"]
+SHARED_NAV_HREFS = [
+    "/",
+    "/scenarios",
+    "/sensitivity",
+    "/vaccination",
+    "/history",
+    "/about",
+    "/glossary",
+]
 
 
 @pytest.mark.parametrize("path,active_key,markers", PAGE_FIXTURES)

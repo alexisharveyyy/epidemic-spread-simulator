@@ -27,10 +27,7 @@ select = [
     "RET", # flake8-return
     "SIM", # flake8-simplify
 ]
-ignore = [
-    "ANN101", # Missing type annotation for self in method
-    "ANN102", # Missing type annotation for cls in classmethod
-]
+ignore = []  # ANN101 / ANN102 were removed from Ruff; nothing to ignore yet.
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["ANN"]

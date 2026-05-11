@@ -54,9 +54,7 @@ def default_spread_request() -> dict:
 def mock_news_api_failure(monkeypatch):
     """Force `httpx.AsyncClient.get` to raise so the news service falls back."""
     mock_client_instance = MagicMock()
-    mock_client_instance.get = AsyncMock(
-        side_effect=httpx.ConnectError("simulated")
-    )
+    mock_client_instance.get = AsyncMock(side_effect=httpx.ConnectError("simulated"))
 
     mock_async_client = MagicMock()
     mock_async_client.return_value.__aenter__ = AsyncMock(

@@ -36,11 +36,11 @@ class SecondaryOffset(TypedDict):
 
 
 SECONDARY_OFFSETS: list[SecondaryOffset] = [
-    {"dlat":  12.0, "dlng":  18.0, "scale": 0.55, "threshold": 20},
-    {"dlat":  -8.0, "dlng": -22.0, "scale": 0.45, "threshold": 25},
-    {"dlat":  18.0, "dlng": -15.0, "scale": 0.38, "threshold": 32},
-    {"dlat": -14.0, "dlng":  28.0, "scale": 0.50, "threshold": 40},
-    {"dlat":   5.0, "dlng":  35.0, "scale": 0.42, "threshold": 50},
+    {"dlat": 12.0, "dlng": 18.0, "scale": 0.55, "threshold": 20},
+    {"dlat": -8.0, "dlng": -22.0, "scale": 0.45, "threshold": 25},
+    {"dlat": 18.0, "dlng": -15.0, "scale": 0.38, "threshold": 32},
+    {"dlat": -14.0, "dlng": 28.0, "scale": 0.50, "threshold": 40},
+    {"dlat": 5.0, "dlng": 35.0, "scale": 0.42, "threshold": 50},
 ]
 
 WAVE_SEVERITY_MAP: dict[int, str] = {

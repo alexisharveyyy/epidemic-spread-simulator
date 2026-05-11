@@ -26,9 +26,9 @@ def test_every_scenario_has_required_fields(client):
             "days",
             "expected_outcome",
         ):
-            assert scenario[field] not in (None, "", 0) or field in {"initial_infected"}, (
-                f"Scenario {scenario.get('id')} missing/empty field {field}"
-            )
+            assert scenario[field] not in (None, "", 0) or field in {
+                "initial_infected"
+            }, f"Scenario {scenario.get('id')} missing/empty field {field}"
 
 
 def test_every_scenario_has_positive_r0(client):

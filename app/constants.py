@@ -27,7 +27,10 @@ MAX_DAYS = 365
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent
 CSV_OUTPUT_DIR = PROJECT_ROOT / "data"
 CHART_DPI = 110
-CHART_FIGSIZE = (10.0, 5.0)  # width, height in inches; renders cleanly inside the 820px UI panel
+CHART_FIGSIZE = (
+    10.0,
+    5.0,
+)  # width, height in inches; renders cleanly inside the 820px UI panel
 
 # ---------------------------------------------------------------------------
 # Chart theme constants (must match styles.css palette exactly)
@@ -35,9 +38,9 @@ CHART_FIGSIZE = (10.0, 5.0)  # width, height in inches; renders cleanly inside t
 CHART_BG_PRIMARY = "#0f1628"
 CHART_BG_AXES = "#161d35"
 CHART_COLOR_LABELS = "#8899bb"
-CHART_COLOR_S = "#00d4ff"   # accent-cyan
-CHART_COLOR_I = "#ffaa00"   # accent-amber
-CHART_COLOR_R = "#00ff88"   # accent-green
+CHART_COLOR_S = "#00d4ff"  # accent-cyan
+CHART_COLOR_I = "#ffaa00"  # accent-amber
+CHART_COLOR_R = "#00ff88"  # accent-green
 CHART_GRID_ALPHA = 0.1
 
 # ---------------------------------------------------------------------------
@@ -62,7 +65,9 @@ SPREAD_MAX_DAY = 90
 SPREAD_LAT_CLAMP = 80.0
 SPREAD_TOTAL_COUNTRIES = 195
 SPREAD_COUNTRIES_PER_DAY = 2.1
-SPREAD_CLUSTER_RAMP_DAYS = 40.0  # days over which a secondary cluster ramps from 0 to full radius
+SPREAD_CLUSTER_RAMP_DAYS = (
+    40.0  # days over which a secondary cluster ramps from 0 to full radius
+)
 
 # ---------------------------------------------------------------------------
 # HTML slider bounds (passed into Jinja2 context so the template never hardcodes them)
