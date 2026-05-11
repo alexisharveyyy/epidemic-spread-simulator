@@ -1,5 +1,12 @@
 # Epidemic Spread Simulator
 
+[![CI](https://github.com/alexisharveyyy/epidemic-spread-simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/alexisharveyyy/epidemic-spread-simulator/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/live%20demo-online-00d4ff)](https://epidemic-spread-simulator.onrender.com)
+[![Python](https://img.shields.io/badge/python-3.11-blue)](https://www.python.org/downloads/release/python-3119/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+**Live demo:** https://epidemic-spread-simulator.onrender.com
+
 A fully runnable epidemiological simulation platform built around an SIR
 (Susceptible-Infected-Recovered) compartmental model. The application exposes
 a FastAPI REST API that accepts simulation parameters, runs a SciPy ODE solver,
@@ -172,6 +179,26 @@ Response:
   }
 ]
 ```
+
+## Deployment
+
+The live demo is hosted on Render and auto-deploys on every push to `main`.
+
+**Manual redeploy:** push a commit to `main`, or trigger a manual deploy in
+the Render dashboard.
+
+**Environment variables (set in the host's dashboard, not in the repo):**
+
+- `NEWS_API_KEY` — optional; falls back to synthetic headlines if unset
+- `APP_ENV` — set to `production`
+- `PYTHON_VERSION` — `3.11.9`
+
+**Deploying your own copy:**
+
+1. Fork this repo
+2. Sign up at https://render.com
+3. **New +** → **Blueprint** → point at your fork's `render.yaml`
+4. Optionally add `NEWS_API_KEY` in the service's environment variables panel
 
 ## Tests
 
